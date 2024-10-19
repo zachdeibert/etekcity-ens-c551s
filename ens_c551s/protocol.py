@@ -18,6 +18,7 @@ UNIT_CALIBRATION: dict[consts.unit, float] = {
 
 class protocol:
     class state(typing.NamedTuple):
+        connected: bool
         stable: bool
         unit: consts.unit
         weight: float
@@ -30,7 +31,9 @@ class protocol:
         self: protocol, addr: str, callback: typing.Callable[[state], None]
     ) -> None:
         self.__callback = callback
-        self.__client = bleak.BleakClient(addr)
+        self.__client = bleak.BleakClient(
+            addr, lambda _: callback(protocol.state(False, False, consts.unit.ounce, 0))
+        )
         self.__seq = 1
 
     async def connect(self: protocol) -> None:
@@ -88,7 +91,7 @@ class protocol:
             if sign == consts.sign.negative.value:
                 weight = -weight
             weight *= UNIT_CALIBRATION[consts.unit.gram] / UNIT_CALIBRATION[unit]
-            self.__callback(protocol.state(stable, unit, weight))
+            self.__callback(protocol.state(True, stable, unit, weight))
 
     async def __tx(
         self: protocol, cmd: consts.command, format: str = "", *values: int

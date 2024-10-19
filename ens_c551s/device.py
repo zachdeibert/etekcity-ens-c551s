@@ -11,6 +11,7 @@ class device(contextlib.AbstractAsyncContextManager["device"]):
     __allowed_units: consts.allowed_unit
     __event: asyncio.Event
     __hardware_ver: str
+    __is_connected: bool
     __is_stable: bool
     __proto: protocol
     __queue: async_queue
@@ -34,6 +35,10 @@ class device(contextlib.AbstractAsyncContextManager["device"]):
     @property
     def hardware_ver(self: device) -> str:
         return self.__hardware_ver
+
+    @property
+    def is_connected(self: device) -> bool:
+        return self.__is_connected
 
     @property
     def is_stable(self: device) -> bool:
@@ -107,6 +112,7 @@ class device(contextlib.AbstractAsyncContextManager["device"]):
         del (
             self.__allowed_units,
             self.__hardware_ver,
+            self.__is_connected,
             self.__is_stable,
             self.__queue,
             self.__software_ver,
@@ -116,6 +122,7 @@ class device(contextlib.AbstractAsyncContextManager["device"]):
         )
 
     def __update(self: device, state: protocol.state) -> None:
+        self.__is_connected = state.connected
         self.__is_stable = state.stable
         self.__unit = state.unit
         self.__weight = state.weight

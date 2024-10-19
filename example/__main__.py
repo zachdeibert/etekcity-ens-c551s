@@ -11,7 +11,7 @@ async def connect(addr: str) -> None:
         print(f"Hardware revision = {dev.hardware_ver}", file=sys.stderr)
         print(f"Software revision = {dev.software_ver}", file=sys.stderr)
 
-        while True:
+        while dev.is_connected:
             print(dev.weight)
             try:
                 await asyncio.sleep(1)
