@@ -8,6 +8,8 @@ from .protocol import protocol
 
 
 class device(contextlib.AbstractAsyncContextManager["device"]):
+    NEVER_TIMEOUT = 0
+
     __allowed_units: consts.allowed_unit
     __event: asyncio.Event
     __hardware_ver: str
@@ -54,9 +56,17 @@ class device(contextlib.AbstractAsyncContextManager["device"]):
 
     @timeout.setter
     def timeout(self: device, value: int) -> None:
+        async def keepalive() -> None:
+            await self.__proto.set_timeout(300)
+
         async def update() -> None:
-            await self.__proto.set_timeout(value)
-            self.__timeout = value
+            if value == device.NEVER_TIMEOUT:
+                await keepalive()
+                self.__queue.periodically(keepalive, 140.0)
+            else:
+                self.__queue.periodically(None, 0.0)
+                await self.__proto.set_timeout(value)
+                self.__timeout = value
 
         self.__queue.queue(update())
 
