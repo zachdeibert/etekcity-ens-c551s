@@ -124,7 +124,6 @@ async def run(mqtt_addr: mqtt_addr, mqtt_ca: str | None, ble_addr: str) -> None:
                         "name": "Etekcity Nutrition Scale",
                         "sw_version": dev.software_ver,
                     },
-                    "icon": "mdi:scale",
                     "origin": {
                         "name": "Etekcity ENS-C551S Library",
                         "support_url": "https://github.com/zachdeibert/etekcity-ens-c551s/issues",
@@ -132,11 +131,27 @@ async def run(mqtt_addr: mqtt_addr, mqtt_ca: str | None, ble_addr: str) -> None:
                     },
                 }
                 mqtt.publish(
+                    f"{mqtt_addr.prefix}/binary_sensor/{object_id}/config",
+                    json.dumps(
+                        {
+                            **base_config,
+                            "device_class": "vibration",
+                            "name": "Changing",
+                            "qos": 1,
+                            "state_topic": f"{mqtt_addr.prefix}/binary_sensor/{object_id}/state",
+                            "unique_id": f"D40D7ABA-0466-4064-BBF6-{ble_addr_hex}",
+                        }
+                    ).encode(),
+                    1,
+                    True,
+                )
+                mqtt.publish(
                     f"{mqtt_addr.prefix}/button/{object_id}/config",
                     json.dumps(
                         {
                             **base_config,
                             "command_topic": f"{mqtt_addr.prefix}/button/{object_id}/command",
+                            "icon": "mdi:scale",
                             "name": "Tare",
                             "unique_id": f"2A76D837-A343-4E55-91F8-{ble_addr_hex}",
                         }
@@ -150,6 +165,7 @@ async def run(mqtt_addr: mqtt_addr, mqtt_ca: str | None, ble_addr: str) -> None:
                         {
                             **base_config,
                             "device_class": "weight",
+                            "icon": "mdi:scale",
                             "name": "Weight",
                             "qos": 1,
                             "state_class": "measurement",
@@ -193,6 +209,11 @@ async def run(mqtt_addr: mqtt_addr, mqtt_ca: str | None, ble_addr: str) -> None:
                     mqtt.publish(
                         f"{mqtt_addr.prefix}/sensor/{object_id}/state",
                         str(dev.weight).encode(),
+                        1 if dev.is_stable else 0,
+                    )
+                    mqtt.publish(
+                        f"{mqtt_addr.prefix}/binary_sensor/{object_id}/state",
+                        f"OFF" if dev.is_stable else f"ON",
                         1 if dev.is_stable else 0,
                     )
             finally:
