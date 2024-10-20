@@ -9,6 +9,13 @@ readme = "README.md"
 bleak = "^0.22.3"
 python = ">=3.8, <3.14"
 
+[tool.poetry.group.example]
+optional = true
+
+[tool.poetry.group.example.dependencies]
+keyring = "^25.4.1"
+paho-mqtt = "^2.1.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
